@@ -22,3 +22,7 @@ reg (Sequence (r:rs)) s = do
 
 reg (Sequence []) s = return (mempty, s)
 
+reg (Star r) s = return (u, drop (length u) s)
+            where
+            u = (foldMap id) . (unfoldr $ reg r) $ s
+

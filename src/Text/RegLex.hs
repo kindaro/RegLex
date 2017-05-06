@@ -1,22 +1,24 @@
+{-# LANGUAGE
+    TupleSections
+  #-}
 
 module Text.RegLex where
 
 import Data.List
 
-data Reg = Union [Reg]
-         | Sequence [Reg]
-         | Star Reg
-         | Atom String
+data Reg a = Union [Reg a]
+           | Sequence [Reg a]
+           | Star (Reg a)
+           | Atom [a]
 
-reg :: Reg -> String -> (String, String)
-reg (Atom x) s = case x `stripPrefix` s of
-                    Nothing -> error ("Unmatched atom " ++ x ++ "!")
-                    Just t -> (x, t)
+reg :: Eq a => (Reg a) -> [a] -> Maybe ([a], [a])
 
-reg (Sequence (r:rs)) s = (fst x ++ fst y, snd y)
-                    where
-                    x = reg r s
-                    y = reg (Sequence rs) (snd x)
+reg (Atom x) s = (x,) <$> (stripPrefix x s)
 
-reg (Sequence []) s = ("", s)
+reg (Sequence (r:rs)) s = do
+                    x <- reg r s
+                    y <- reg (Sequence rs) (snd x) 
+                    return (fst x ++ fst y, snd y)
+
+reg (Sequence []) s = return (mempty, s)
 

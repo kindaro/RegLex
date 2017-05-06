@@ -11,9 +11,9 @@ data Reg a = Union [Reg a]
            | Star (Reg a)
            | Atom [a]
 
-reg :: Eq a => (Reg a) -> [a] -> Maybe ([a], [a])
+reg :: Eq a => Reg a -> [a] -> Maybe ([a], [a])
 
-reg (Atom x) s = (x,) <$> (stripPrefix x s)
+reg (Atom x) s = (x,) <$> stripPrefix x s
 
 reg (Sequence (r:rs)) s = do
                     x <- reg r s

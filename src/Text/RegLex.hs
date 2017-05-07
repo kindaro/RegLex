@@ -10,8 +10,13 @@ data Reg a = Union [Reg a]
            | Sequence [Reg a]
            | Star (Reg a)
            | Atom [a]
+           | Dot
+           | Drop
 
 reg :: Eq a => Reg a -> [a] -> [([a], [a])]
+
+reg Dot (x:xs) = [(return x, xs)]
+reg Dot [] = []
 
 reg (Atom x) s = case stripPrefix x s of
         Just t -> return (x, t)
@@ -29,4 +34,8 @@ reg (Star r) s = (mempty, s) : star' s
     star' s = case reg r s of
         [] -> []
         us -> concat $ (\(x,t) -> (x,t) : [ (x ++ y, v) | (y, v) <- star' t ]) <$> us
+
+reg (Union rs) s = do
+                    x <- concat $ flip reg s <$> rs
+                    return (fst x, snd x)
 

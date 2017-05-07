@@ -11,9 +11,11 @@ data Reg a = Union [Reg a]
            | Star (Reg a)
            | Atom [a]
 
-reg :: Eq a => Reg a -> [a] -> Maybe ([a], [a])
+reg :: Eq a => Reg a -> [a] -> [([a], [a])]
 
-reg (Atom x) s = (x,) <$> stripPrefix x s
+reg (Atom x) s = case stripPrefix x s of
+        Just t -> return (x, t)
+        Nothing -> mempty
 
 reg (Sequence (r:rs)) s = do
                     x <- reg r s
@@ -22,7 +24,9 @@ reg (Sequence (r:rs)) s = do
 
 reg (Sequence []) s = return (mempty, s)
 
-reg (Star r) s = return (u, drop (length u) s)
-            where
-            u = (foldMap id) . (unfoldr $ reg r) $ s
+reg (Star r) s = (mempty, s) : star' s
+    where
+    star' s = case reg r s of
+        [] -> []
+        us -> concat $ (\(x,t) -> (x,t) : [ (x ++ y, v) | (y, v) <- star' t ]) <$> us
 

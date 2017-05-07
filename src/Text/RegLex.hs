@@ -15,6 +15,9 @@ data Reg a = Union [Reg a]
 
 reg :: Eq a => Reg a -> [a] -> [([a], [a])]
 
+reg Drop (_:xs) = [(mempty, xs)]
+reg Drop [] = []
+
 reg Dot (x:xs) = [(return x, xs)]
 reg Dot [] = []
 
